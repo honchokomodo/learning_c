@@ -3,10 +3,12 @@
 #include "mathhelper.h"
 
 // generate a hash based off of x and y position
-// TODO: make this not suck
 int genHash(int x, int y)
 {
-	int hash = ((53 + x) * 53 + y);
+	// these two could be anything really
+	int bigNum = 2654435761;
+	int primeNum = 7331;
+	int hash = ((primeNum + x * bigNum) * primeNum + y * bigNum);
 	return hash;
 }
 
@@ -92,6 +94,7 @@ void createChunk(Board_t * board, int x, int y)
 	newChunk->y = y;
 	newChunk->keepAlive = 0;
 	newChunk->next = prevHead;
+	newChunk->prevNext = &board->chunks[hash];
 	newChunk->parent = board;
 	newChunk->cells = calloc(size * size, sizeof(Cell_t));
 
@@ -101,33 +104,25 @@ void createChunk(Board_t * board, int x, int y)
 		exit(1);
 	}
 
+	if (prevHead != NULL)
+	{
+		prevHead->prevNext = &newChunk->next;
+	}
+
 	board->chunks[hash] = newChunk;
 }
 
 // destroy a chunk and free memory
-void destroyChunk(Board_t * board, int x, int y)
+void destroyChunk(Chunk_t * chunk)
 {
-	int hash = cmodulus(genHash(x, y), board->numBuckets);
-	Chunk_t ** chunk = &board->chunks[hash];
-
-	// go down the linked list until the chunk is found
-	for (; *chunk != NULL; chunk = &(*chunk)->next)
+	if (chunk->next != NULL)
 	{
-		if (x == (*chunk)->x && y == (*chunk)->y)
-		{
-			break;
-		}
+		chunk->next->prevNext = chunk->prevNext;
 	}
+	*(chunk->prevNext) = chunk->next;
 
-	if (*chunk == NULL)
-	{
-		return;
-	}
-
-	Chunk_t * next = (*chunk)->next;
-	free((*chunk)->cells);
-	free(*chunk);
-	*chunk = next;
+	free(chunk->cells);
+	free(chunk);
 }
 
 // access a cell from a chunk

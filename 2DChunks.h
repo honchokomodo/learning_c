@@ -18,6 +18,7 @@ struct Chunk {
 	int x, y;
 	int keepAlive;
 	struct Chunk * next;
+	struct Chunk ** prevNext;
 	struct Board * parent;
 };
 
@@ -34,7 +35,7 @@ Chunk_t * getChunk(Board_t * board, int x, int y);
 void createChunk(Board_t * board, int x, int y);
 
 // destroy a chunk and free memory
-void destroyChunk(Board_t * board, int x, int y);
+void destroyChunk(Chunk_t * chunk);
 
 // access a cell from a chunk
 Cell_t * getCellChunk(Chunk_t * chunk, int col, int row);
